@@ -32,7 +32,7 @@ package com.dong.leetcode.simple;
 public class ArrangingCoins_441 {
 
     public static void main(String[] args) {
-        System.out.println("line = " + arrangeCoins_v3(5));
+        System.out.println("line = " + arrangeCoins_v4(5));
     }
 
     public static int arrangeCoins_v1(int n) {
@@ -63,6 +63,23 @@ public class ArrangingCoins_441 {
 
     public static int arrangeCoins_v3(int n) {
         return (int) (Math.sqrt(0.25 + 2 * (long) n) - 0.5);
+    }
+
+    /*
+        i代表行数和每行硬币数，n逐行减少i个，当i行大于n的时候代表剩余硬币数量无法在该行构成一行，此时i-1就是总行数。
+     */
+    public static int arrangeCoins_v4(int n) {
+        if (n == 1) {
+            return 1;
+        }
+        int i;
+        for(i = 1; i <= n; i++) {
+            if (i == n) {
+                return i;
+            }
+            n = n - i;
+        }
+        return i - 1;
     }
 
 }
