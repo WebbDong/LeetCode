@@ -19,7 +19,7 @@ import java.io.InputStreamReader;
  * 进阶:
  * 你可以不使用循环或者递归，且在 O(1) 时间复杂度内解决这个问题吗？
  */
-public class _258_各位相加 {
+public class AddDigits_258 {
 
     public static void main(String[] args) throws IOException {
         while (true) {

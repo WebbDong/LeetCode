@@ -29,7 +29,7 @@ package com.dong.leetcode.simple;
  * Input: a = "1010", b = "1011"
  * Output: "10101"
  */
-public class _67_二进制求和 {
+public class AddBinary_67 {
     public static void main(String[] args) {
         System.out.println(addBinary_v1("1010", "1011"));
         System.out.println(addBinary_v2("1010", "1011"));

@@ -47,7 +47,7 @@ package com.dong.leetcode.simple;
  * 1 <= len(bits) <= 1000.
  * bits[i] is always 0 or 1.
  */
-public class _717_1比特与2比特字符 {
+public class OneBitAndTwoBitCharacters_717 {
     public static void main(String[] args) {
 //        int[] bits = {
 //                1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0
