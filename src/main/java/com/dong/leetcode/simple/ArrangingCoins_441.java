@@ -73,7 +73,7 @@ public class ArrangingCoins_441 {
             return 1;
         }
         int i;
-        for(i = 1; i <= n; i++) {
+        for (i = 1; i <= n; i++) {
             if (i == n) {
                 return i;
             }
