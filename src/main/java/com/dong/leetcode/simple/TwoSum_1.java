@@ -1,5 +1,7 @@
 package com.dong.leetcode.simple;
 
+import java.util.Arrays;
+
 /**
  * 两数之和
  *
@@ -13,7 +15,36 @@ package com.dong.leetcode.simple;
 public class TwoSum_1 {
 
     public static void main(String[] args) {
+//        int[] nums = {2, 7, 11, 15};
+        int[] nums = {2, 5, 5, 11};
+        int target = 10;
+        final int[] indexes = twoSum_v2(nums, target);
+        System.out.println(Arrays.toString(indexes));
+    }
 
+    public static int[] twoSum_v1(int[] nums, int target) {
+        for (int i = 0; i < nums.length; i++) {
+            for (int j = 0; j < nums.length; j++) {
+                if (i == j) {
+                    continue;
+                }
+                if (nums[i] + nums[j] == target) {
+                    return new int[] {i, j};
+                }
+            }
+        }
+        return null;
+    }
+
+    public static int[] twoSum_v2(int[] nums, int target) {
+        for (int i = 0; i < nums.length; i++) {
+            for (int j = i + 1; j<nums.length; j++) {
+                if(nums[i] + nums[j] == target) {
+                    return new int[] {i, j};
+                }
+            }
+        }
+        return null;
     }
 
 }
