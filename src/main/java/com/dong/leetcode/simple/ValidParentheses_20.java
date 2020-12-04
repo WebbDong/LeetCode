@@ -1,6 +1,7 @@
 package com.dong.leetcode.simple;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -47,7 +48,7 @@ public class ValidParentheses_20 {
     }
 
     public static void main(String[] args) {
-        System.out.println(isValid_v4("([}}])"));
+        System.out.println(isValid_v5(")(){}"));
     }
 
     public static boolean isValid(String s) {
@@ -145,6 +146,22 @@ public class ValidParentheses_20 {
             } else if (c == '{') {
                 stack.push('}');
             } else if (stack.isEmpty() || c != stack.pop()) {
+                return false;
+            }
+        }
+        return stack.isEmpty();
+    }
+
+    public static boolean isValid_v5(String s) {
+        Deque<Character> stack = new ArrayDeque<>();
+        for (char c : s.toCharArray()) {
+            if (c == '(') {
+                stack.addFirst(')');
+            } else if (c == '[') {
+                stack.addFirst(']');
+            } else if (c == '{') {
+                stack.addFirst('}');
+            } else if (stack.isEmpty() || c != stack.poll()) {
                 return false;
             }
         }
