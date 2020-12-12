@@ -22,8 +22,10 @@ public class RemoveElement_27 {
 
     public static void main(String[] args) {
 //        int[] arr = {3, 2, 2, 3};
-        int[] arr = {0, 1, 2, 2, 3, 0, 4, 2};
-        System.out.println(removeElement_v2(arr, 2));
+//        int[] arr = {0, 1, 2, 2, 3, 0, 4, 2};
+        int[] arr = {4, 1, 2, 3, 5};
+        int val = 4;
+        System.out.println(removeElement_v2(arr, val));
         System.out.println(Arrays.toString(arr));
     }
 
@@ -45,7 +47,9 @@ public class RemoveElement_27 {
 
     /**
      * 双指针 —— 当要删除的元素很少时
-     *
+     *      现在考虑数组包含很少的要删除的元素的情况。例如，num=[1，2，3，5，4]，Val=4num=[1，2，3，5，4]，Val=4。
+     *      之前的算法会对前四个元素做不必要的复制操作。另一个例子是 num=[4，1，2，3，5]，Val=4num=[4，1，2，3，5]，Val=4。
+     *      似乎没有必要将 [1，2，3，5][1，2，3，5] 这几个元素左移一步，因为问题描述中提到元素的顺序可以更改。
      * @param nums
      * @param val
      * @return
@@ -55,8 +59,7 @@ public class RemoveElement_27 {
         int n = nums.length;
         while (i < n) {
             if (nums[i] == val) {
-                nums[i] = nums[n - 1];
-                n--;
+                nums[i] = nums[--n];
             } else {
                 i++;
             }
