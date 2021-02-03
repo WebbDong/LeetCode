@@ -30,6 +30,8 @@ import java.util.regex.Pattern;
  */
 public class ImplementQueueWithTwoStacks_offer09 {
 
+    // ---------------------------- 方案一 --------------------------------
+
     private static Deque<Integer> stack1 = new LinkedList<>();
 
     private static Deque<Integer> stack2 = new LinkedList<>();
@@ -49,6 +51,32 @@ public class ImplementQueueWithTwoStacks_offer09 {
             }
         }
         return stack2.poll();
+    }
+
+    // ---------------------------- 方案二、此方案不符合题目描述的使用两个栈实现 --------------------------------
+
+    private static int[] arr = new int[10000];
+
+    /**
+     * 写入指针
+     */
+    private static int writeIndex = 0;
+
+    /**
+     * 读取指针
+     */
+    private static int readIndex = 0;
+
+    public static void appendTail2(int value) {
+        // 插入则向s1进行插入
+        arr[writeIndex++] = value;
+    }
+
+    public static int deleteHead2() {
+        if (readIndex == writeIndex) {
+            return -1;
+        }
+        return arr[readIndex++];
     }
 
     public static void main(String[] args) {
@@ -76,10 +104,10 @@ public class ImplementQueueWithTwoStacks_offer09 {
                 if ("CQueue".equals(command)) {
                     resList.add("null");
                 } else if ("deleteHead".equals(command)) {
-                    int res = deleteHead1();
+                    int res = deleteHead2();
                     resList.add(String.valueOf(res));
                 } else if ("appendTail".equals(command)) {
-                    appendTail1(Integer.parseInt(operatorList.get(j++)));
+                    appendTail2(Integer.parseInt(operatorList.get(j++)));
                     resList.add("null");
                 }
             }
