@@ -1,8 +1,16 @@
 package com.dong.leetcode.simple;
 
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * 用两个栈实现一个队列。队列的声明如下，请实现它的两个函数 appendTail 和 deleteHead ，分别完成在队列尾部插入整数和在队列头部删除整数的功能。
- * (若队列中没有元素，deleteHead 操作返回 -1 )
+ * (若队列中没有元素，deleteHead 操作返回 -1 )
  *
  * 示例 1：
  *  输入：
@@ -22,8 +30,66 @@ package com.dong.leetcode.simple;
  */
 public class ImplementQueueWithTwoStacks_offer09 {
 
-    public static void main(String[] args) {
+    private static Deque<Integer> stack1 = new LinkedList<>();
 
+    private static Deque<Integer> stack2 = new LinkedList<>();
+
+    public static void appendTail1(int value) {
+        stack1.push(value);
+    }
+
+    public static int deleteHead1() {
+        if (stack2.isEmpty()) {
+            if (stack1.isEmpty()) {
+                return -1;
+            }
+
+            while (!stack1.isEmpty()) {
+                stack2.push(stack1.poll());
+            }
+        }
+        return stack2.poll();
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        final Pattern pattern1 = Pattern.compile("[a-zA-Z]+");
+        final Pattern pattern2 = Pattern.compile("\\d+");
+        List<String> commandList = new ArrayList<>();
+        List<String> operatorList = new ArrayList<>();
+        List<String> resList = new ArrayList<>();
+        String line1, line2;
+        while (scanner.hasNext()) {
+            line1 = scanner.nextLine();
+            line2 = scanner.nextLine();
+            Matcher matcher1 = pattern1.matcher(line1);
+            Matcher matcher2 = pattern2.matcher(line2);
+            while (matcher1.find()) {
+                commandList.add(matcher1.group());
+            }
+            while (matcher2.find()) {
+                operatorList.add(matcher2.group());
+            }
+
+            for (int i = 0, j = 0, size = commandList.size(); i < size; i++) {
+                String command = commandList.get(i);
+                if ("CQueue".equals(command)) {
+                    resList.add("null");
+                } else if ("deleteHead".equals(command)) {
+                    int res = deleteHead1();
+                    resList.add(String.valueOf(res));
+                } else if ("appendTail".equals(command)) {
+                    appendTail1(Integer.parseInt(operatorList.get(j++)));
+                    resList.add("null");
+                }
+            }
+
+            System.out.println(resList);
+
+            commandList.clear();
+            operatorList.clear();
+            resList.clear();
+        }
     }
 
 }
