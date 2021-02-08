@@ -1,6 +1,8 @@
 package com.dong.leetcode.simple;
 
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 合并两个有序链表
@@ -25,11 +27,11 @@ import java.util.Scanner;
  */
 public class MergeTwoSortedLists_21 {
 
-    public class ListNode {
+    private static class ListNode {
 
-        int val;
+        private int val;
 
-        ListNode next;
+        private ListNode next;
 
         ListNode() {}
 
@@ -44,12 +46,125 @@ public class MergeTwoSortedLists_21 {
 
     }
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+    private static void printList(ListNode node) {
+        if (node == null) {
+            System.out.println("[]");
+            return;
+        }
 
+        ListNode currentNode = node;
+        System.out.print("[");
+        while (currentNode != null) {
+            System.out.print(currentNode.val);
+            currentNode = currentNode.next;
+            if (currentNode == null) {
+                System.out.print("]");
+            } else {
+                System.out.print(",");
+            }
+        }
+        System.out.println();
     }
 
-    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Pattern pattern = Pattern.compile("(\\[(\\d+,)*\\d+\\])+");
+        ListNode[] listNodes = new ListNode[2];
+
+        while (scanner.hasNext()) {
+            String line = scanner.nextLine();
+            Matcher matcher = pattern.matcher(line);
+
+            for (int i = 0; matcher.find(); i++) {
+                String str = matcher.group();
+                str = str.substring(1, str.length() - 1);
+                String[] numberStrs = str.split(",");
+                ListNode currentNode = null;
+
+                for (int j = 0; j < numberStrs.length; j++) {
+                    String numberStr = numberStrs[j];
+                    if (currentNode == null) {
+                        currentNode = new ListNode(Integer.parseInt(numberStr));
+                        listNodes[i] = currentNode;
+                    } else {
+                        currentNode.next = new ListNode(Integer.parseInt(numberStr));
+                        currentNode = currentNode.next;
+                    }
+                }
+            }
+
+            printList(mergeTwoLists2(listNodes[0], listNodes[1]));
+            listNodes[0] = null;
+            listNodes[1] = null;
+        }
+    }
+
+    private static ListNode mergeTwoLists1(ListNode l1, ListNode l2) {
+        ListNode currentNode1 = l1;
+        ListNode currentNode2 = l2;
+        ListNode newCurrentNode = null;
+        ListNode newHeadNode = null;
+
+        while (currentNode1 != null && currentNode2 != null) {
+            int val;
+            if (currentNode1.val < currentNode2.val) {
+                val = currentNode1.val;
+                currentNode1 = currentNode1.next;
+            } else {
+                val = currentNode2.val;
+                currentNode2 = currentNode2.next;
+            }
+
+            if (newCurrentNode == null) {
+                newCurrentNode = new ListNode(val);
+                newHeadNode = newCurrentNode;
+            } else {
+                newCurrentNode.next = new ListNode(val);
+                newCurrentNode = newCurrentNode.next;
+            }
+        }
+
+        while (currentNode1 != null) {
+            if (newCurrentNode == null) {
+                newCurrentNode = new ListNode(currentNode1.val);
+                newHeadNode = newCurrentNode;
+            } else {
+                newCurrentNode.next = new ListNode(currentNode1.val);
+                newCurrentNode = newCurrentNode.next;
+            }
+            currentNode1 = currentNode1.next;
+        }
+
+        while (currentNode2 != null) {
+            if (newCurrentNode == null) {
+                newCurrentNode = new ListNode(currentNode2.val);
+                newHeadNode = newCurrentNode;
+            } else {
+                newCurrentNode.next = new ListNode(currentNode2.val);
+                newCurrentNode = newCurrentNode.next;
+            }
+            currentNode2 = currentNode2.next;
+        }
+        return newHeadNode;
+    }
+
+    /**
+     * 递归方式
+     * @param l1
+     * @param l2
+     * @return
+     */
+    private static ListNode mergeTwoLists2(ListNode l1, ListNode l2) {
+        return null;
+    }
+
+    /**
+     * 迭代方式
+     * @param l1
+     * @param l2
+     * @return
+     */
+    private static ListNode mergeTwoLists3(ListNode l1, ListNode l2) {
         return null;
     }
 
