@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.array;
 
 /**
  * 搜索插入位置
@@ -10,7 +10,7 @@ package com.dong.leetcode.simple;
  *  输入: [1,3,5,6], 5
  *  输出: 2
  *
- * 示例 2:
+ * 示例 2:
  *  输入: [1,3,5,6], 2
  *  输出: 1
  *

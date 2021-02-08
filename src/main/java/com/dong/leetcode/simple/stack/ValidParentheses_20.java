@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.stack;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -8,7 +8,9 @@ import java.util.Objects;
 import java.util.Stack;
 
 /**
- * 给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串，判断字符串是否有效。
+ * 有效的括号
+ *
+ * 给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串，判断字符串是否有效。
  *
  * 有效字符串需满足：
  *      左括号必须用相同类型的右括号闭合。
@@ -19,19 +21,19 @@ import java.util.Stack;
  *      输入: "()"
  *      输出: true
  *
- * 示例 2:
+ * 示例2:
  *      输入: "()[]{}"
  *      输出: true
  *
- * 示例 3:
+ * 示例3:
  *      输入: "(]"
  *      输出: false
  *
- * 示例 4:
+ * 示例4:
  *      输入: "([)]"
  *      输出: false
  *
- * 示例 5:
+ * 示例5:
  *      输入: "{[]}"
  *      输出: true
  */

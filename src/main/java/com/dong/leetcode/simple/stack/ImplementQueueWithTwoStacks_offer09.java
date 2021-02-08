@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.stack;
 
 import java.util.ArrayList;
 import java.util.Deque;

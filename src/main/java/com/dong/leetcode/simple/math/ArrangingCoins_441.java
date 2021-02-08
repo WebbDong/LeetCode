@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.math;
 
 /**
  *

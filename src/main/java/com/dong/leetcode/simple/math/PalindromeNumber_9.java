@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.math;
 
 /**
  * 回文数
@@ -8,7 +8,7 @@ package com.dong.leetcode.simple;
  *      输入: 121
  *      输出: true
  *
- * 示例 2:
+ * 示例 2:
  *      输入: -121
  *      输出: false
  *      解释: 从左向右读, 为 -121 。 从右向左读, 为 121- 。因此它不是一个回文数。

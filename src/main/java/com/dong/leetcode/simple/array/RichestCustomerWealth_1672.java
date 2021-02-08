@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.array;
 
 /**
  * 最富有客户的资产总量

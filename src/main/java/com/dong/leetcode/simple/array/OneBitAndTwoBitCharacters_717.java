@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.array;
 
 /**
  * 717. 1比特与2比特字符

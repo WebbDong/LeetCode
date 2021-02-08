@@ -1,4 +1,4 @@
-package com.dong.leetcode.simple;
+package com.dong.leetcode.simple.linkedlist;
 
 import java.util.Scanner;
 import java.util.regex.Matcher;
