@@ -60,17 +60,30 @@ package com.dong.leetcode.simple.multithreading;
  */
 public class TrafficLightControlledIntersection_1279 {
 
-    public static void main(String[] args) {
+    private static class TrafficLight1 {
+
+        // 当前交通灯状态，1为 A 路是绿灯，2为 B 路是绿灯
+        private int currentLightState = 1;
+
+        public void carArrived(
+                int carId,           // ID of the car
+                int roadId,          // ID of the road the car travels on. Can be 1 (road A) or 2 (road B)
+                int direction,       // Direction of the car
+                Runnable turnGreen,  // Use turnGreen.run() to turn light to green on current road
+                Runnable crossCar    // Use crossCar.run() to make car cross the intersection
+        ) {
+            synchronized (this) {
+                if (currentLightState != roadId) {
+                    turnGreen.run();
+                    currentLightState = roadId;
+                }
+                crossCar.run();
+            }
+        }
 
     }
 
-    public static void carArrived(
-            int carId,           // ID of the car
-            int roadId,          // ID of the road the car travels on. Can be 1 (road A) or 2 (road B)
-            int direction,       // Direction of the car
-            Runnable turnGreen,  // Use turnGreen.run() to turn light to green on current road
-            Runnable crossCar    // Use crossCar.run() to make car cross the intersection
-    ) {
+    public static void main(String[] args) {
 
     }
 
