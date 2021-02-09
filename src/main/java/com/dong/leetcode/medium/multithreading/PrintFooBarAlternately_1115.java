@@ -1,6 +1,7 @@
 package com.dong.leetcode.medium.multithreading;
 
 import java.util.Scanner;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,10 +116,96 @@ public class PrintFooBarAlternately_1115 {
 
     }
 
-    public static void main(String[] args) {
+    /**
+     * 方法三、使用锁
+     */
+    private static class FooBar3 {
+
+        private int n;
+
+        private boolean flag = true;
+
+        public void setN(int n) {
+            this.n = n;
+        }
+
+        public void foo() {
+            for (int i = 0; i < n;) {
+                synchronized (this) {
+                    if (!flag) {
+                        try {
+                            this.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    System.out.print("foo");
+                    flag = false;
+                    i++;
+                    this.notifyAll();
+                }
+            }
+        }
+
+        public void bar() {
+            for (int i = 0; i < n;) {
+                synchronized (this) {
+                    if (flag) {
+                        try {
+                            this.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    System.out.print("bar");
+                    flag = true;
+                    i++;
+                    this.notifyAll();
+                }
+            }
+        }
+
+    }
+
+    /**
+     * 方法四、使用 CyclicBarrier
+     */
+    private static class FooBar4 {
+
+        private int n;
+
+        private final CyclicBarrier cb = new CyclicBarrier(2);
+
+        private volatile boolean flag = true;
+
+        public void setN(int n) {
+            this.n = n;
+        }
+
+        public void foo() throws Exception {
+            for (int i = 0; i < n; i++) {
+                while (!flag)
+                    ;
+                System.out.print("foo");
+                flag = false;
+                cb.await();
+            }
+        }
+
+        public void bar() throws Exception {
+            for (int i = 0; i < n; i++) {
+                cb.await();
+                System.out.print("bar");
+                flag = true;
+            }
+        }
+
+    }
+
+    public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
         Pattern p = Pattern.compile("\\d+");
-        FooBar2 fooBar = new FooBar2();
+        FooBar4 fooBar = new FooBar4();
 
         while (scanner.hasNext()) {
             String line = scanner.nextLine();
