@@ -132,7 +132,7 @@ public class PrintFooBarAlternately_1115 {
         public void foo() {
             for (int i = 0; i < n;) {
                 synchronized (this) {
-                    if (!flag) {
+                    while (!flag) {
                         try {
                             this.wait();
                         } catch (InterruptedException e) {
@@ -150,7 +150,7 @@ public class PrintFooBarAlternately_1115 {
         public void bar() {
             for (int i = 0; i < n;) {
                 synchronized (this) {
-                    if (flag) {
+                    while (flag) {
                         try {
                             this.wait();
                         } catch (InterruptedException e) {
