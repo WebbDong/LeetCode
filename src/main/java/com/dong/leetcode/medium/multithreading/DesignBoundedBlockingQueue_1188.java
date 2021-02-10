@@ -1,5 +1,22 @@
 package com.dong.leetcode.medium.multithreading;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * 设计有限阻塞队列
  *
@@ -72,25 +89,190 @@ public class DesignBoundedBlockingQueue_1188 {
 
     private static class BoundedBlockingQueue {
 
-        public BoundedBlockingQueue(int capacity) {
+        private int[] items;
 
+        private int count;
+
+        private int capacity;
+
+        private int putIndex;
+
+        private int takeIndex;
+
+        private final Lock lock = new ReentrantLock();
+
+        private final Condition notFull = lock.newCondition();
+
+        private final Condition notEmpty = lock.newCondition();
+
+        public BoundedBlockingQueue(int capacity) {
+            this.capacity = capacity;
+            items = new int[capacity];
         }
 
         public void enqueue(int element) throws InterruptedException {
-
+            try {
+                lock.lock();
+                while (count == capacity) {
+                    notFull.await();
+                }
+                items[putIndex++] = element;
+                if (putIndex == items.length) {
+                    putIndex = 0;
+                }
+                count++;
+                notEmpty.signal();
+            } finally {
+                lock.unlock();
+            }
         }
 
         public int dequeue() throws InterruptedException {
-            return 0;
+            try {
+                lock.lock();
+                while (items.length == 0) {
+                    notEmpty.await();
+                }
+                int data = items[takeIndex++];
+                if (takeIndex == items.length) {
+                    takeIndex = 0;
+                }
+                count--;
+                notFull.signal();
+                return data;
+            } finally {
+                lock.unlock();
+            }
         }
 
         public int size() {
-            return 0;
+            return count;
+        }
+
+    }
+
+    private static ThreadPoolExecutor producerPool = new ThreadPoolExecutor(
+            50, 100, 5, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(5),
+            new ThreadPoolExecutor.AbortPolicy());
+
+    private static ThreadPoolExecutor consumerPool = new ThreadPoolExecutor(
+            50, 100, 5, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(5),
+            new ThreadPoolExecutor.AbortPolicy());
+
+    private static BoundedBlockingQueue queue;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNext()) {
+            // 生产者线程数量
+            int producerCount;
+            // 消费者线程数量
+            int consumerCount;
+            try {
+                producerCount = Integer.parseInt(scanner.nextLine());
+                consumerCount = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            String command = scanner.next();
+            String param = scanner.next();
+            TaskGroup taskGroup = parse(command, param);
+            startTasks(taskGroup, producerCount, consumerCount);
         }
     }
 
-    public static void main(String[] args) {
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class TaskGroup {
 
+        private List<Runnable> enqueueTaskList = new ArrayList<>();
+
+        private List<Runnable> dequeueTaskList = new ArrayList<>();
+
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class EnqueueTask implements Runnable {
+
+        private int data;
+
+        @SneakyThrows
+        @Override
+        public void run() {
+            queue.enqueue(data);
+        }
+
+    }
+
+    private static class DequeueTask implements Runnable {
+
+        @SneakyThrows
+        @Override
+        public void run() {
+            int data = queue.dequeue();
+            System.out.print(data + ",");
+        }
+
+    }
+
+    private static void startTasks(TaskGroup taskGroup, int producerCount, int consumerCount) {
+        new Thread(() -> {
+//            taskGroup.enqueueTaskList.forEach(r -> producerPool.execute(r));
+            producerPool.execute(() -> {
+                for (int i = 0, size = taskGroup.enqueueTaskList.size(); i < size; i++) {
+                    taskGroup.enqueueTaskList.get(i).run();
+                }
+            });
+        }).start();
+
+        new Thread(() -> {
+//            taskGroup.dequeueTaskList.forEach(r -> consumerPool.execute(r));
+            consumerPool.execute(() -> {
+                for (int i = 0, size = taskGroup.enqueueTaskList.size(); i < size; i++) {
+                    taskGroup.enqueueTaskList.get(i).run();
+                }
+            });
+        }).start();
+    }
+
+    private static TaskGroup parse(String command, String param) {
+        List<String> commandList = parseCommand(command);
+        List<Integer> paramList = parseParam(param);
+        List<Runnable> enqueueTaskList = new ArrayList<>();
+        List<Runnable> dequeueTaskList = new ArrayList<>();
+        for (int i = 0, j = 0, size = commandList.size(); i < size; i++) {
+            String c = commandList.get(i);
+            if ("BoundedBlockingQueue".equals(c)) {
+                queue = new BoundedBlockingQueue(paramList.get(j++));
+            } else if ("enqueue".equals(c)) {
+                enqueueTaskList.add(new EnqueueTask(paramList.get(j++)));
+            } else if ("dequeue".equals(c)) {
+                dequeueTaskList.add(new DequeueTask());
+            }
+        }
+        return new TaskGroup(enqueueTaskList, dequeueTaskList);
+    }
+
+    private static List<Integer> parseParam(String param) {
+        List<Integer> paramList = new ArrayList<>();
+        Matcher matcher = Pattern.compile("\\d+").matcher(param);
+        while (matcher.find()) {
+            paramList.add(Integer.parseInt(matcher.group()));
+        }
+        return paramList;
+    }
+
+    private static List<String> parseCommand(String command) {
+        List<String> commandList = new ArrayList<>();
+        Matcher matcher = Pattern.compile("\\w+").matcher(command);
+        while (matcher.find()) {
+            commandList.add(matcher.group());
+        }
+        return commandList;
     }
 
 }
