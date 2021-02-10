@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -87,13 +88,24 @@ import java.util.regex.Pattern;
  */
 public class DesignBoundedBlockingQueue_1188 {
 
-    private static class BoundedBlockingQueue {
+    private interface Queue {
+
+        void enqueue(int element) throws InterruptedException;
+
+        int dequeue() throws InterruptedException;
+
+        int size();
+
+    }
+
+    /**
+     * 方法一、使用 Lock 和 Condition
+     */
+    private static class BoundedBlockingQueue1 implements Queue {
 
         private int[] items;
 
         private int count;
-
-        private int capacity;
 
         private int putIndex;
 
@@ -105,15 +117,15 @@ public class DesignBoundedBlockingQueue_1188 {
 
         private final Condition notEmpty = lock.newCondition();
 
-        public BoundedBlockingQueue(int capacity) {
-            this.capacity = capacity;
+        public BoundedBlockingQueue1(int capacity) {
             items = new int[capacity];
         }
 
         public void enqueue(int element) throws InterruptedException {
             try {
                 lock.lock();
-                while (count == capacity) {
+                while (count == items.length) {
+                    // 队列已满，阻塞入队操作
                     notFull.await();
                 }
                 items[putIndex++] = element;
@@ -130,7 +142,8 @@ public class DesignBoundedBlockingQueue_1188 {
         public int dequeue() throws InterruptedException {
             try {
                 lock.lock();
-                while (items.length == 0) {
+                while (count == 0) {
+                    // 队列已空，阻塞出队操作
                     notEmpty.await();
                 }
                 int data = items[takeIndex++];
@@ -142,6 +155,113 @@ public class DesignBoundedBlockingQueue_1188 {
                 return data;
             } finally {
                 lock.unlock();
+            }
+        }
+
+        public int size() {
+            try {
+                lock.lock();
+                return count;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+    }
+
+    /**
+     * 方法二、使用信号量
+     */
+    private static class BoundedBlockingQueue2 implements Queue {
+
+        private int[] items;
+
+        private int count;
+
+        private int putIndex;
+
+        private int takeIndex;
+
+        private final Semaphore notEmptySemaphore;
+
+        private final Semaphore notFullSemaphore;
+
+        public BoundedBlockingQueue2(int capacity) {
+            items = new int[capacity];
+            notEmptySemaphore = new Semaphore(capacity);
+            notFullSemaphore = new Semaphore(0);
+        }
+
+        public void enqueue(int element) throws InterruptedException {
+            notEmptySemaphore.acquire();
+            items[putIndex++] = element;
+            if (putIndex == items.length) {
+                putIndex = 0;
+            }
+            count++;
+            notFullSemaphore.release();
+        }
+
+        public int dequeue() throws InterruptedException {
+            notFullSemaphore.acquire();
+            int data = items[takeIndex++];
+            if (takeIndex == items.length) {
+                takeIndex = 0;
+            }
+            count--;
+            notEmptySemaphore.release();
+            return data;
+        }
+
+        public int size() {
+            return count;
+        }
+
+    }
+
+    /**
+     * 方法三、使用 synchronized
+     */
+    private static class BoundedBlockingQueue3 implements Queue {
+
+        private int[] items;
+
+        private int count;
+
+        private int putIndex;
+
+        private int takeIndex;
+
+        public BoundedBlockingQueue3(int capacity) {
+            items = new int[capacity];
+        }
+
+        public void enqueue(int element) throws InterruptedException {
+            synchronized (this) {
+                while (count == items.length) {
+                    this.wait();
+                }
+                items[putIndex++] = element;
+                if (putIndex == items.length) {
+                    putIndex = 0;
+                }
+                count++;
+                this.notifyAll();
+            }
+        }
+
+        public int dequeue() throws InterruptedException {
+            synchronized (this) {
+                while (count == 0) {
+                    this.wait();
+                }
+                int data = items[takeIndex++];
+                if (takeIndex == items.length) {
+                    takeIndex = 0;
+                }
+                count--;
+                this.notifyAll();
+                return data;
             }
         }
 
@@ -161,7 +281,7 @@ public class DesignBoundedBlockingQueue_1188 {
             new ArrayBlockingQueue<>(5),
             new ThreadPoolExecutor.AbortPolicy());
 
-    private static BoundedBlockingQueue queue;
+    private static Queue queue;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -220,23 +340,8 @@ public class DesignBoundedBlockingQueue_1188 {
     }
 
     private static void startTasks(TaskGroup taskGroup, int producerCount, int consumerCount) {
-        new Thread(() -> {
-//            taskGroup.enqueueTaskList.forEach(r -> producerPool.execute(r));
-            producerPool.execute(() -> {
-                for (int i = 0, size = taskGroup.enqueueTaskList.size(); i < size; i++) {
-                    taskGroup.enqueueTaskList.get(i).run();
-                }
-            });
-        }).start();
-
-        new Thread(() -> {
-//            taskGroup.dequeueTaskList.forEach(r -> consumerPool.execute(r));
-            consumerPool.execute(() -> {
-                for (int i = 0, size = taskGroup.enqueueTaskList.size(); i < size; i++) {
-                    taskGroup.enqueueTaskList.get(i).run();
-                }
-            });
-        }).start();
+        taskGroup.enqueueTaskList.forEach(r -> producerPool.execute(r));
+        taskGroup.dequeueTaskList.forEach(r -> consumerPool.execute(r));
     }
 
     private static TaskGroup parse(String command, String param) {
@@ -247,7 +352,9 @@ public class DesignBoundedBlockingQueue_1188 {
         for (int i = 0, j = 0, size = commandList.size(); i < size; i++) {
             String c = commandList.get(i);
             if ("BoundedBlockingQueue".equals(c)) {
-                queue = new BoundedBlockingQueue(paramList.get(j++));
+//                queue = new BoundedBlockingQueue1(paramList.get(j++));
+//                queue = new BoundedBlockingQueue2(paramList.get(j++));
+                queue = new BoundedBlockingQueue3(paramList.get(j++));
             } else if ("enqueue".equals(c)) {
                 enqueueTaskList.add(new EnqueueTask(paramList.get(j++)));
             } else if ("dequeue".equals(c)) {
