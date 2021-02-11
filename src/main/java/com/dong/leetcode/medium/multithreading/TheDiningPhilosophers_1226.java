@@ -10,6 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,6 +55,79 @@ import java.util.regex.Pattern;
  */
 public class TheDiningPhilosophers_1226 {
 
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static final class EatTask implements Runnable {
+
+        private int philosopher;
+
+        private int n;
+
+        private DiningPhilosophers dp;
+
+        private final Runnable pickLeftFork = () -> {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("[")
+                    .append(philosopher).append(",")
+                    .append(1).append(",")
+                    .append(1)
+                    .append("], ");
+            System.out.print(sb.toString());
+        };
+
+        private final Runnable pickRightFork = () -> {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("[")
+                    .append(philosopher).append(",")
+                    .append(2).append(",")
+                    .append(1)
+                    .append("], ");
+            System.out.print(sb.toString());
+        };
+
+        private final Runnable eat = () -> {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("[")
+                    .append(philosopher).append(",")
+                    .append(0).append(",")
+                    .append(3)
+                    .append("], ");
+            System.out.print(sb.toString());
+        };
+
+        private final Runnable putLeftFork = () -> {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("[")
+                    .append(philosopher).append(",")
+                    .append(1).append(",")
+                    .append(2)
+                    .append("], ");
+            System.out.print(sb.toString());
+        };
+
+        private final Runnable putRightFork = () -> {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("[")
+                    .append(philosopher).append(",")
+                    .append(2).append(",")
+                    .append(2)
+                    .append("], ");
+            System.out.print(sb.toString());
+        };
+
+        @SneakyThrows
+        @Override
+        public void run() {
+            for (int i = 0; i < n; i++) {
+                dp.wantsToEat(philosopher, pickLeftFork, pickRightFork,
+                        eat, putLeftFork, putRightFork);
+            }
+//            System.out.println(philosopher + " done");
+        }
+
+    }
+
     private interface DiningPhilosophers {
 
         void wantsToEat(int philosopher,
@@ -66,14 +140,14 @@ public class TheDiningPhilosophers_1226 {
     }
 
     /**
-     * 方法一、使用信号量
+     * 方法一、允许最多四个哲学家持有叉子，可保证至少一名哲学家可以吃面
      */
     private static class DiningPhilosophers1 implements DiningPhilosophers {
 
         /**
          * 每一个 fork 代表一个 ReentrantLock，一共五个 fork
          */
-        private final ReentrantLock[] locks = {
+        private final Lock[] locks = {
                 new ReentrantLock(),
                 new ReentrantLock(),
                 new ReentrantLock(),
@@ -133,13 +207,55 @@ public class TheDiningPhilosophers_1226 {
     }
 
     /**
-     * 方法二、使用 volatile 变量 + 自旋
+     * 方法二、只允许1个哲学家就餐
      */
     private static class DiningPhilosophers2 implements DiningPhilosophers {
+
+        private final Lock[] locks = {
+                new ReentrantLock(),
+                new ReentrantLock(),
+                new ReentrantLock(),
+                new ReentrantLock(),
+                new ReentrantLock(),
+        };
+
+        private final Lock eatLock = new ReentrantLock();
 
         public DiningPhilosophers2() {
 
         }
+
+        public void wantsToEat(int philosopher,
+                               Runnable pickLeftFork,
+                               Runnable pickRightFork,
+                               Runnable eat,
+                               Runnable putLeftFork,
+                               Runnable putRightFork) throws InterruptedException {
+            int leftForkNum = (philosopher + 1) % 5;
+            int rightForkNum = philosopher;
+
+            eatLock.lock();
+            locks[leftForkNum].lock();
+            locks[rightForkNum].lock();
+            try {
+                pickLeftFork.run();
+                pickRightFork.run();
+                eat.run();
+                putLeftFork.run();
+                putRightFork.run();
+            } finally {
+                locks[leftForkNum].unlock();
+                locks[rightForkNum].unlock();
+                eatLock.unlock();
+            }
+        }
+
+    }
+
+    /**
+     *
+     */
+    private static class DiningPhilosophers3 implements DiningPhilosophers {
 
         public void wantsToEat(int philosopher,
                                Runnable pickLeftFork,
@@ -152,50 +268,14 @@ public class TheDiningPhilosophers_1226 {
 
     }
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    private static final class EatTask implements Runnable {
-
-        private int philosopher;
-
-        private int n;
-
-        private DiningPhilosophers dp;
-
-        private static final Runnable pickLeftFork = () -> {
-        };
-
-        private static final Runnable pickRightFork = () -> {
-        };
-
-        private static final Runnable eat = () -> {
-        };
-
-        private static final Runnable putLeftFork = () -> {
-        };
-
-        private static final Runnable putRightFork = () -> {
-        };
-
-        @SneakyThrows
-        @Override
-        public void run() {
-            for (int i = 0; i < n; i++) {
-                dp.wantsToEat(philosopher, pickLeftFork, pickRightFork,
-                        eat, putLeftFork, putRightFork);
-            }
-        }
-
-    }
-
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         Pattern p = Pattern.compile("\\d+");
-        DiningPhilosophers dp = new DiningPhilosophers1();
+        DiningPhilosophers dp = new DiningPhilosophers3();
+        final int philosopherCount = 5;
         final ThreadPoolExecutor philosopherPool = new ThreadPoolExecutor(
-                5, 5, 5, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(1),
+                philosopherCount, philosopherCount, 5, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(5),
                 new ThreadPoolExecutor.AbortPolicy());
 
         while (scanner.hasNext()) {
@@ -207,7 +287,7 @@ public class TheDiningPhilosophers_1226 {
                 } catch (NumberFormatException e) {
                     continue;
                 }
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < philosopherCount; i++) {
                     philosopherPool.execute(new EatTask(i, n, dp));
                 }
             }
