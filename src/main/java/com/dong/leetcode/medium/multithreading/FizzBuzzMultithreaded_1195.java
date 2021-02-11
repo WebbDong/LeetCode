@@ -8,6 +8,9 @@ import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -92,6 +95,7 @@ public class FizzBuzzMultithreaded_1195 {
                     this.notifyAll();
                 }
             }
+//            System.out.print("\nfizz breakout");
         }
 
         public void buzz(Runnable printBuzz) throws InterruptedException {
@@ -109,6 +113,7 @@ public class FizzBuzzMultithreaded_1195 {
                     this.notifyAll();
                 }
             }
+//            System.out.print("\nbuzz breakout");
         }
 
         public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {
@@ -126,6 +131,7 @@ public class FizzBuzzMultithreaded_1195 {
                     this.notifyAll();
                 }
             }
+//            System.out.print("\nfizzbuzz breakout");
         }
 
         public void number(IntConsumer printNumber) throws InterruptedException {
@@ -143,6 +149,7 @@ public class FizzBuzzMultithreaded_1195 {
                     this.notifyAll();
                 }
             }
+//            System.out.print("\nnumber breakout");
         }
 
     }
@@ -157,36 +164,188 @@ public class FizzBuzzMultithreaded_1195 {
 
         private int n;
 
+        private final Lock lock = new ReentrantLock();
+
+        private final Condition fizzCondition = lock.newCondition();
+
+        private final Condition buzzCondition = lock.newCondition();
+
+        private final Condition fizzbuzzCondition = lock.newCondition();
+
+        private final Condition numberCondition = lock.newCondition();
+
+        /**
+         * 0: number, 1: buzz, 2: fizzbuzz, 3: fizz
+         */
+        private int state;
+
         public void setN(int n) {
             this.n = n;
         }
 
         public void fizz(Runnable printFizz) throws InterruptedException {
-
-            for (int i = 3; i <= n; i += 3) {
-
+            try {
+                lock.lock();
+                BreakOutLoop:
+                for (int i = 3; i <= n; i += 3) {
+                    while (state != 3) {
+                        fizzCondition.await();
+                        if (state == 0) {
+                            break BreakOutLoop;
+                        }
+                    }
+                    printFizz.run();
+                    state = 0;
+                    numberCondition.signal();
+                }
+            } finally {
+                lock.unlock();
             }
-            printFizz.run();
+            System.out.print("\nfizz breakout");
+        }
+
+        public void buzz(Runnable printBuzz) throws InterruptedException {
+            try {
+                lock.lock();
+                BreakOutLoop:
+                for (int i = 5; i <= n; i += 5) {
+                    while (state != 1) {
+                        buzzCondition.await();
+                        if (state == 0) {
+                            break BreakOutLoop;
+                        }
+                    }
+                    printBuzz.run();
+                    state = 0;
+                    numberCondition.signal();
+                }
+            } finally {
+                lock.unlock();
+            }
+            System.out.print("\nbuzz breakout");
+        }
+
+        public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {
+            try {
+                lock.lock();
+                BreakOutLoop:
+                for (int i = 15; i <= n; i += 15) {
+                    while (state != 2) {
+                        fizzbuzzCondition.await();
+                        if (state == 0) {
+                            break BreakOutLoop;
+                        }
+                    }
+                    printFizzBuzz.run();
+                    state = 0;
+                    numberCondition.signal();
+                }
+            } finally {
+                lock.unlock();
+            }
+            System.out.print("\nfizzbuzz breakout");
+        }
+
+        public void number(IntConsumer printNumber) throws InterruptedException {
+            try {
+                lock.lock();
+                for (int i = 1; i <= n; i++) {
+                    if (i % 15 == 0) {
+                        state = 2;
+                        fizzbuzzCondition.signal();
+                    } else if (i % 3 == 0) {
+                        state = 3;
+                        fizzCondition.signal();
+                    } else if (i % 5 == 0) {
+                        state = 1;
+                        buzzCondition.signal();
+                    } else {
+                        state = 0;
+                        printNumber.accept(i);
+                    }
+                    while (state != 0) {
+                        numberCondition.await();
+                    }
+                }
+                // 唤醒其他线程并结束线程
+                state = 0;
+                fizzbuzzCondition.signal();
+                fizzCondition.signal();
+                buzzCondition.signal();
+            } finally {
+                lock.unlock();
+            }
+            System.out.print("\nnumber breakout");
+        }
+
+    }
+
+    /**
+     * 方法三、使用 volatile 变量 + 自旋
+     */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static class FizzBuzz3 implements FizzBuzz {
+
+        private int n;
+
+        /**
+         * 0: number, 1: buzz, 2: fizzbuzz, 3: fizz
+         */
+        private volatile int state;
+
+        public void setN(int n) {
+            this.n = n;
+        }
+
+        public void fizz(Runnable printFizz) throws InterruptedException {
+            for (int i = 3; i <= n; i += 3) {
+                while (state != 3) {
+                    Thread.yield();
+                }
+                printFizz.run();
+            }
+            System.out.print("\nfizz breakout");
         }
 
         public void buzz(Runnable printBuzz) throws InterruptedException {
             for (int i = 5; i <= n; i += 5) {
-
+                while (state != 1) {
+                    Thread.yield();
+                }
+                printBuzz.run();
             }
-            printBuzz.run();
+            System.out.print("\nbuzz breakout");
         }
 
         public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {
             for (int i = 15; i <= n; i += 15) {
-
+                while (state != 2) {
+                    Thread.yield();
+                }
+                printFizzBuzz.run();
             }
-            printFizzBuzz.run();
+            System.out.print("\nfizzbuzz breakout");
         }
 
         public void number(IntConsumer printNumber) throws InterruptedException {
             for (int i = 1; i <= n; i++) {
-                printNumber.accept(i);
+                while (state != 0) {
+                    Thread.yield();
+                }
+                if (i % 15 == 0) {
+                    state = 2;
+                } else if (i % 3 == 0) {
+                    state = 3;
+                } else if (i % 5 == 0) {
+                    state = 1;
+                } else {
+                    state = 0;
+                    printNumber.accept(i);
+                }
             }
+            System.out.print("\nnumber breakout");
         }
 
     }
@@ -214,7 +373,7 @@ public class FizzBuzzMultithreaded_1195 {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         Pattern p = Pattern.compile("\\d+");
-        final FizzBuzz fizzBuzz = new FizzBuzz1();
+        final FizzBuzz fizzBuzz = new FizzBuzz3();
         while (scanner.hasNext()) {
             Matcher matcher = p.matcher(scanner.nextLine());
             while (matcher.find()) {
