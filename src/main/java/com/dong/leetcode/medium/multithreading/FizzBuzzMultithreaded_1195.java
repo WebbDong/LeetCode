@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -201,7 +202,7 @@ public class FizzBuzzMultithreaded_1195 {
             } finally {
                 lock.unlock();
             }
-            System.out.print("\nfizz breakout");
+//            System.out.print("\nfizz breakout");
         }
 
         public void buzz(Runnable printBuzz) throws InterruptedException {
@@ -222,7 +223,7 @@ public class FizzBuzzMultithreaded_1195 {
             } finally {
                 lock.unlock();
             }
-            System.out.print("\nbuzz breakout");
+//            System.out.print("\nbuzz breakout");
         }
 
         public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {
@@ -243,7 +244,7 @@ public class FizzBuzzMultithreaded_1195 {
             } finally {
                 lock.unlock();
             }
-            System.out.print("\nfizzbuzz breakout");
+//            System.out.print("\nfizzbuzz breakout");
         }
 
         public void number(IntConsumer printNumber) throws InterruptedException {
@@ -275,7 +276,7 @@ public class FizzBuzzMultithreaded_1195 {
             } finally {
                 lock.unlock();
             }
-            System.out.print("\nnumber breakout");
+//            System.out.print("\nnumber breakout");
         }
 
     }
@@ -301,22 +302,32 @@ public class FizzBuzzMultithreaded_1195 {
 
         public void fizz(Runnable printFizz) throws InterruptedException {
             for (int i = 3; i <= n; i += 3) {
+                // 15的倍数不处理
+                if (i % 15 == 0) {
+                    continue;
+                }
                 while (state != 3) {
                     Thread.yield();
                 }
                 printFizz.run();
+                state = 0;
             }
-            System.out.print("\nfizz breakout");
+//            System.out.print("\nfizz breakout");
         }
 
         public void buzz(Runnable printBuzz) throws InterruptedException {
             for (int i = 5; i <= n; i += 5) {
+                // 15的倍数不处理
+                if (i % 15 == 0) {
+                    continue;
+                }
                 while (state != 1) {
                     Thread.yield();
                 }
                 printBuzz.run();
+                state = 0;
             }
-            System.out.print("\nbuzz breakout");
+//            System.out.print("\nbuzz breakout");
         }
 
         public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {
@@ -325,8 +336,9 @@ public class FizzBuzzMultithreaded_1195 {
                     Thread.yield();
                 }
                 printFizzBuzz.run();
+                state = 0;
             }
-            System.out.print("\nfizzbuzz breakout");
+//            System.out.print("\nfizzbuzz breakout");
         }
 
         public void number(IntConsumer printNumber) throws InterruptedException {
@@ -334,6 +346,8 @@ public class FizzBuzzMultithreaded_1195 {
                 while (state != 0) {
                     Thread.yield();
                 }
+
+                // 0: number, 1: buzz, 2: fizzbuzz, 3: fizz
                 if (i % 15 == 0) {
                     state = 2;
                 } else if (i % 3 == 0) {
@@ -341,11 +355,95 @@ public class FizzBuzzMultithreaded_1195 {
                 } else if (i % 5 == 0) {
                     state = 1;
                 } else {
-                    state = 0;
                     printNumber.accept(i);
                 }
             }
-            System.out.print("\nnumber breakout");
+//            System.out.print("\nnumber breakout");
+        }
+
+    }
+
+    /**
+     * 方法四、使用信号量
+     */
+    @Data
+    @AllArgsConstructor
+    private static class FizzBuzz4 implements FizzBuzz {
+
+        private int n;
+
+        private final Semaphore fizzSemaphore;
+
+        private final Semaphore buzzSemaphore;
+
+        private final Semaphore fizzbuzzSemaphore;
+
+        private final Semaphore numberSemaphore;
+
+        /**
+         * 0: number, 1: buzz, 2: fizzbuzz, 3: fizz
+         */
+        private volatile int state;
+
+        public FizzBuzz4() {
+            fizzSemaphore = new Semaphore(0);
+            buzzSemaphore = new Semaphore(0);
+            fizzbuzzSemaphore = new Semaphore(0);
+            numberSemaphore = new Semaphore(1);
+        }
+
+        public void setN(int n) {
+            this.n = n;
+        }
+
+        public void fizz(Runnable printFizz) throws InterruptedException {
+            for (int i = 3; i <= n; i += 3) {
+                if (i % 15 == 0) {
+                    continue;
+                }
+                fizzSemaphore.acquire();
+                printFizz.run();
+                numberSemaphore.release();
+            }
+//            System.out.print("\nfizz breakout");
+        }
+
+        public void buzz(Runnable printBuzz) throws InterruptedException {
+            for (int i = 5; i <= n; i += 5) {
+                if (i % 15 == 0) {
+                    continue;
+                }
+                buzzSemaphore.acquire();
+                printBuzz.run();
+                numberSemaphore.release();
+            }
+//            System.out.print("\nbuzz breakout");
+        }
+
+        public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {
+            for (int i = 15; i <= n; i += 15) {
+                fizzbuzzSemaphore.acquire();
+                printFizzBuzz.run();
+                numberSemaphore.release();
+            }
+//            System.out.print("\nfizzbuzz breakout");
+        }
+
+        public void number(IntConsumer printNumber) throws InterruptedException {
+            for (int i = 1; i <= n; i++) {
+                numberSemaphore.acquire();
+                if (i % 15 == 0) {
+                    fizzbuzzSemaphore.release();
+                } else if (i % 3 == 0) {
+                    fizzSemaphore.release();
+                } else if (i % 5 == 0) {
+                    buzzSemaphore.release();
+                } else {
+                    printNumber.accept(i);
+                    numberSemaphore.release();
+                }
+            }
+//            System.out.print("\nnumber breakout");
         }
 
     }
@@ -373,7 +471,7 @@ public class FizzBuzzMultithreaded_1195 {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         Pattern p = Pattern.compile("\\d+");
-        final FizzBuzz fizzBuzz = new FizzBuzz3();
+        final FizzBuzz fizzBuzz = new FizzBuzz4();
         while (scanner.hasNext()) {
             Matcher matcher = p.matcher(scanner.nextLine());
             while (matcher.find()) {
