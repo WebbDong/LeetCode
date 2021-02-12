@@ -36,10 +36,15 @@ public class ReverseLinkedList_206 {
         node2.next = node3;
         node3.next = node4;
         printLinkedList(head);
-        printLinkedList(reverseList(head));
+        printLinkedList(reverseList2(head));
     }
 
-    public static ListNode reverseList(ListNode head) {
+    /**
+     * 迭代
+     * @param head
+     * @return
+     */
+    public static ListNode reverseList1(ListNode head) {
         // 1->2->3->4->5->NULL
         // 遍历的当前节点
         ListNode current = head;
@@ -53,6 +58,22 @@ public class ReverseLinkedList_206 {
             newHead = current;
             current = next;
         }
+        return newHead;
+    }
+
+    /**
+     * 递归
+     * @param head
+     * @return
+     */
+    public static ListNode reverseList2(ListNode head) {
+        if (head == null || head.next == null) {
+            return head;
+        }
+
+        ListNode newHead = reverseList2(head.next);
+        head.next.next = head;
+        head.next = null;
         return newHead;
     }
 
