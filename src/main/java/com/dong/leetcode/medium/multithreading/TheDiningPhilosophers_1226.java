@@ -10,6 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
@@ -253,9 +254,17 @@ public class TheDiningPhilosophers_1226 {
     }
 
     /**
-     *
+     * 方法三、避免死锁，发生死锁的条件: 当五个哲学家都左手持有左边的叉子或当五个哲学家都右手持有右边的叉子时，会发生死锁
      */
     private static class DiningPhilosophers3 implements DiningPhilosophers {
+
+        private final Lock[] locks = {
+                new ReentrantLock(),
+                new ReentrantLock(),
+                new ReentrantLock(),
+                new ReentrantLock(),
+                new ReentrantLock(),
+        };
 
         public void wantsToEat(int philosopher,
                                Runnable pickLeftFork,
@@ -263,7 +272,90 @@ public class TheDiningPhilosophers_1226 {
                                Runnable eat,
                                Runnable putLeftFork,
                                Runnable putRightFork) throws InterruptedException {
+            int leftForkNum = (philosopher + 1) % 5;
+            int rightForkNum = philosopher;
 
+            if (philosopher % 2 == 0) {
+                // 偶数编号的哲学家优先拿起左边的叉子，再拿起右边的叉子
+                locks[leftForkNum].lock();
+                locks[rightForkNum].lock();
+            } else {
+                // 奇数编号的哲学家优先拿起右边的叉子，再拿起左边的叉子
+                locks[rightForkNum].lock();
+                locks[leftForkNum].lock();
+            }
+
+            try {
+                pickLeftFork.run();
+                pickRightFork.run();
+                eat.run();
+                putLeftFork.run();
+                putRightFork.run();
+            } finally {
+                locks[leftForkNum].unlock();
+                locks[rightForkNum].unlock();
+            }
+        }
+
+    }
+
+    /**
+     * 方法四、使用位运算来判断叉子的使用状态，使用 AtomicInteger 来使用 CAS + 自旋
+     */
+    private static class DiningPhilosophers4 implements DiningPhilosophers {
+
+        /**
+         * 初始化为0, 二进制为00000，每个二进制位表示一个叉子的使用状态，0: 未使用，1: 已使用
+         */
+        private AtomicInteger fork = new AtomicInteger(0);
+
+        /**
+         * 每个叉子的掩码值，00001, 00010, 00100, 01000, 10000
+         */
+        private final int[] forkMask = {1, 2, 4, 8, 16};
+
+        private Semaphore eatLimit = new Semaphore(4);
+
+        public void wantsToEat(int philosopher,
+                               Runnable pickLeftFork,
+                               Runnable pickRightFork,
+                               Runnable eat,
+                               Runnable putLeftFork,
+                               Runnable putRightFork) throws InterruptedException {
+            int leftForkMask = forkMask[(philosopher + 1) % 5];
+            int rightForkMask = forkMask[philosopher];
+
+            eatLimit.acquire();
+            while (!pickFork(leftForkMask)) {
+                Thread.yield();
+            }
+            while (!pickFork(rightForkMask)) {
+                Thread.yield();
+            }
+
+            pickLeftFork.run();
+            pickRightFork.run();
+            eat.run();
+            putLeftFork.run();
+            putRightFork.run();
+
+            while (!putFork(leftForkMask)) {
+                Thread.yield();
+            }
+            while (!putFork(rightForkMask)) {
+                Thread.yield();
+            }
+            eatLimit.release();
+        }
+
+        private boolean pickFork(int mask) {
+            int expect = fork.get();
+            return (expect & mask) > 0 ? false : fork.compareAndSet(expect, expect ^ mask);
+        }
+
+        private boolean putFork(int mask) {
+            int expect = fork.get();
+            return fork.compareAndSet(expect, expect ^ mask);
         }
 
     }
@@ -271,7 +363,7 @@ public class TheDiningPhilosophers_1226 {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         Pattern p = Pattern.compile("\\d+");
-        DiningPhilosophers dp = new DiningPhilosophers3();
+        DiningPhilosophers dp = new DiningPhilosophers4();
         final int philosopherCount = 5;
         final ThreadPoolExecutor philosopherPool = new ThreadPoolExecutor(
                 philosopherCount, philosopherCount, 5, TimeUnit.SECONDS,
