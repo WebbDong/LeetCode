@@ -30,7 +30,7 @@ public class WebCrawlerMultithreaded_1242 {
 
         //    ExecutorService service=Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()*2);
         public List<String> crawl(String startUrl, HtmlParser htmlParser) {
-            int n = Runtime.getRuntime().availableProcessors() * 2+2;
+            int n = Runtime.getRuntime().availableProcessors() * 2 + 2;
             urlQueue.add(startUrl);
             mainHost = getHost(startUrl);
             for (int i = 0; i < n; ++i) {
@@ -176,7 +176,6 @@ public class WebCrawlerMultithreaded_1242 {
                     } catch (Exception e) {
                     }
                 }
-
             }
 
             // thus all synchronized blocks of the same object can have only one thread
