@@ -53,6 +53,9 @@ public class FindAllNumbersDisappearedInAnArray_448 {
      * 方法二、原地修改
      * 用一个哈希表记录数组 nums 中的数字，由于数字范围均在 [1,n] 中，记录数字后我们再利用哈希表检查 [1,n]
      * 中的每一个数是否出现，从而找到缺失的数字。
+     *
+     * 遍历 nums，每遇到一个数 xx，就让 nums[x−1] 增加 nn。由于 nums 中所有数均在 [1,n] 中，增加以后，这些数必然大于 n。
+     * 最后我们遍历 nums，若 nums[i] 未大于 n，就说明没有遇到过数 i+1。这样我们就找到了缺失的数字。
      * @param nums
      * @return
      */
