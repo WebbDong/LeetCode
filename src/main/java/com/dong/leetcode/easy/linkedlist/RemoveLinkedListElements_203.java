@@ -33,14 +33,33 @@ public class RemoveLinkedListElements_203 {
     }
 
     private static ListNode removeElements(ListNode head, int val) {
-        return null;
+        ListNode dummyHead = new ListNode(0);
+        dummyHead.next = head;
+        ListNode temp = dummyHead;
+        while (temp.next != null) {
+            if (temp.next.val == val) {
+                temp.next = temp.next.next;
+            } else {
+                temp = temp.next;
+            }
+        }
+        return dummyHead.next;
+    }
+
+    private static ListNode removeElements2(ListNode head, int val) {
+        if (head == null) {
+            return head;
+        }
+        head.next = removeElements2(head.next, val);
+        return head.val == val ? head.next : head;
     }
 
     private static void printAll(ListNode head) {
         while (head != null) {
-            System.out.println(head.val);
+            System.out.print(head.val + ", ");
             head = head.next;
         }
+        System.out.println();
     }
 
     public static void main(String[] args) {
@@ -57,6 +76,8 @@ public class RemoveLinkedListElements_203 {
         node4.next = node5;
         node5.next = node6;
         node6.next = node7;
+        printAll(node1);
+        removeElements(node1, 6);
         printAll(node1);
     }
 
