@@ -1,7 +1,5 @@
 package com.dong.leetcode.medium.linkedlist;
 
-import lombok.Data;
-
 /**
  * 给定一个链表，返回链表开始入环的第一个节点。如果链表无环，则返回null。
  *
@@ -30,7 +28,6 @@ import lombok.Data;
  */
 public class LinkedListCycleII_142 {
 
-    @Data
     private static class ListNode {
         int val;
         ListNode next;
@@ -41,18 +38,26 @@ public class LinkedListCycleII_142 {
     }
 
     public static ListNode detectCycle(ListNode head) {
-        if (head == null || head.next == null) {
+        if (head == null) {
             return null;
         }
-
         ListNode slow = head;
-        ListNode fast = head.next;
-        while (fast != null && fast.next != null) {
-            if (slow == fast) {
-                return slow;
-            }
+        ListNode fast = head;
+        while (fast != null) {
             slow = slow.next;
-            fast = fast.next.next;
+            if (fast.next != null) {
+                fast = fast.next.next;
+            } else {
+                return null;
+            }
+            if (fast == slow) {
+                ListNode ptr = head;
+                while (ptr != slow) {
+                    ptr = ptr.next;
+                    slow = slow.next;
+                }
+                return ptr;
+            }
         }
         return null;
     }
@@ -66,7 +71,7 @@ public class LinkedListCycleII_142 {
         ListNode node4 = new ListNode(-4);
         node3.next = node4;
         node4.next = node2;
-        System.out.println(detectCycle(node1));
+        System.out.println(detectCycle(node1).val);
     }
 
 }
