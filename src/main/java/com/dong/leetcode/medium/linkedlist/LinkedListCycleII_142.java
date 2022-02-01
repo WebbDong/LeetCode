@@ -45,6 +45,15 @@ public class LinkedListCycleII_142 {
             return null;
         }
 
+        ListNode slow = head;
+        ListNode fast = head.next;
+        while (fast != null && fast.next != null) {
+            if (slow == fast) {
+                return slow;
+            }
+            slow = slow.next;
+            fast = fast.next.next;
+        }
         return null;
     }
 
