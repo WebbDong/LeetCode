@@ -30,7 +30,19 @@ public class RemoveDuplicatesFromSortedList_83 {
     }
 
     private static ListNode deleteDuplicates(ListNode head) {
-        return null;
+        if (head == null) {
+            return head;
+        }
+
+        ListNode temp = head;
+        while (temp.next != null) {
+            if (temp.val == temp.next.val) {
+                temp.next = temp.next.next;
+            } else {
+                temp = temp.next;
+            }
+        }
+        return head;
     }
 
     private static void printAll(ListNode head) {
@@ -51,6 +63,8 @@ public class RemoveDuplicatesFromSortedList_83 {
         node2.next = node3;
         node3.next = node4;
         node4.next = node5;
+        printAll(node1);
+        deleteDuplicates(node1);
         printAll(node1);
     }
 
