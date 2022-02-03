@@ -30,8 +30,17 @@ public class RemoveDuplicatesFromSortedListII_82 {
     }
 
     private static ListNode deleteDuplicates(ListNode head) {
+        if (head == null) {
+            return head;
+        }
 
-        return null;
+        ListNode dummyHead = new ListNode(0, head);
+        ListNode temp = dummyHead;
+        while (temp.next != null) {
+            if (temp.next.val == temp.next.next.val) {
+            }
+        }
+        return dummyHead.next;
     }
 
     private static void printAll(ListNode head) {
