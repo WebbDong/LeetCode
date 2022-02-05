@@ -51,6 +51,21 @@ public class MiddleOfTheLinkedList_876 {
         return temp;
     }
 
+    /**
+     * 快慢指针法
+     * 用两个指针 slow 与 fast 一起遍历链表。slow 一次走一步，fast 一次走两步。
+     * 那么当 fast 到达链表的末尾时，slow 必然位于中间。
+     */
+    private static ListNode middleNode2(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        return slow;
+    }
+
     public static void main(String[] args) {
         ListNode node1 = new ListNode(1);
         ListNode node2 = new ListNode(2);
@@ -64,6 +79,8 @@ public class MiddleOfTheLinkedList_876 {
         node4.next = node5;
         node5.next = node6;
         ListNode middleNode = middleNode(node1);
+        System.out.println(middleNode.val);
+        middleNode = middleNode2(node1);
         System.out.println(middleNode.val);
     }
 
