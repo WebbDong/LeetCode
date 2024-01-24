@@ -47,6 +47,8 @@ public class RemoveNthNodeFromEndOfList_19 {
         printLinkedList(head);
         head = removeNthFromEnd2(head, 2);
         printLinkedList(head);
+        head = removeNthFromEnd3(head, 1);
+        printLinkedList(head);
     }
 
     public static ListNode makeLinkedList(int[] arr) {
@@ -128,10 +130,6 @@ public class RemoveNthNodeFromEndOfList_19 {
         }
         second.next = second.next.next;
         return dummy.next;
-    }
-
-    public static ListNode removeNthFromEnd4() {
-        return null;
     }
 
 }
