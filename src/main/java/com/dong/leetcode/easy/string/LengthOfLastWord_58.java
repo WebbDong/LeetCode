@@ -33,33 +33,16 @@ public class LengthOfLastWord_58 {
 
     public static void main(String[] args) {
         String s = "Hello World";
-        System.out.println(lengthOfLastWord2(s));
+        System.out.println(lengthOfLastWord(s));
 
         s = "   fly me   to   the moon  ";
-        System.out.println(lengthOfLastWord2(s));
+        System.out.println(lengthOfLastWord(s));
 
         s = "luffy is still joyboy";
-        System.out.println(lengthOfLastWord2(s));
+        System.out.println(lengthOfLastWord(s));
     }
 
-    public static int lengthOfLastWord1(String s) {
-        char[] chars = s.toCharArray();
-        int len = 0;
-        boolean isFirstFindLetter = false;
-        for (int i = chars.length - 1; i >= 0; i--) {
-            char c = chars[i];
-            if (isFirstFindLetter && c == ' ') {
-                break;
-            } else if (c == ' ') {
-                continue;
-            }
-            len++;
-            isFirstFindLetter = true;
-        }
-        return len;
-    }
-
-    public static int lengthOfLastWord2(String s) {
+    public static int lengthOfLastWord(String s) {
         int len = 0;
         for (int i = s.length() - 1; i >= 0; i--) {
             char c = s.charAt(i);
